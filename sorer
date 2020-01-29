@@ -1,0 +1,92 @@
+#! /usr/bin/python3
+
+import sys
+import os
+from sor import SoR
+import util
+
+# Parse arguements and return dictionary that represents it
+def parseArgs(argv):
+    args = {'fileName' : "",
+            'from' : 0,
+            'length' : -1,
+            'printColType' : -1,
+            'printColIdx1' : -1,
+            'printColIdx2' : -1,
+            'isMissingIdx1' : -1,
+            'isMissingIdx2' : -1}
+
+    argsIndex = { 'fileName' : -1,
+                    'from' : -1,
+                    'length' : -1,
+                    'printColType' : -1,
+                    'printColIdx1' : -1,
+                    'printColIdx2' : -1,
+                    'isMissingIdx1' : -1,
+                    'isMissingIdx2' : -1}
+
+    index = 0
+    for arg in argv:
+        if arg == "-f":
+            argsIndex['fileName'] = index + 1
+        elif arg == "-from":
+            argsIndex['from'] = index + 1
+        elif arg == "-len":
+            argsIndex['length'] = index + 1
+        elif arg == "-print_col_type":
+            argsIndex['printColType'] = index + 1
+        elif arg == "-print_col_idx":
+            argsIndex['printColIdx1'] = index + 1
+            argsIndex['printColIdx2'] = index + 2
+        elif arg == "-is_missing_idx":
+            argsIndex['isMissingIdx1'] = index + 1
+            argsIndex['isMissingIdx2'] = index + 2
+        index+= 1
+
+    for key, value in argsIndex.items():
+        if value != -1:
+            args[key] = argv[value]
+    
+    return args
+
+def main():
+    args = parseArgs(sys.argv)
+    f = open(args['fileName'], 'r')
+    fileSize = os.path.getsize(args['fileName'])
+    start = int(args['from'])
+    if (args['length'] == -1):
+        args['length'] = fileSize
+        
+    length = int(args['length'])
+
+    mySor = SoR()
+    mySor.generateSchema(f)
+    mySor.generateData(f, start, length, fileSize)
+    
+    # Print the type of a column: BOOL, INT, FLOAT, STRING
+    if args['printColType'] != -1:
+        index = int(args['printColType'])
+        print(mySor.getColumnType(index))
+    # Print element at printColIdx1 and printColIdx2
+    elif args['printColIdx2'] != -1 and args['printColIdx1'] != -1:
+        columnIndex = int(args['printColIdx1'])
+        rowIndex = int(args['printColIdx2'])
+        columnType = mySor.getColumnType(columnIndex)
+
+        element = mySor.getElement(columnIndex, rowIndex)
+
+        util.compareType(columnType, element)
+        if element == '': print(element)
+        elif columnType == "STRING": print("\"" + element.strip("\"") + "\"")
+        else: print(element)
+    # Print boolean representing if missing value at isMissingIdx1 and isMissingIdx2
+    elif args['isMissingIdx2'] != -1 and args['isMissingIdx1'] != -1:
+        columnIndex = int(args['isMissingIdx1'])
+        rowIndex = int(args['isMissingIdx2'])
+        element = mySor.getElement(columnIndex, rowIndex)
+        if element == '': print(1)
+        else: print(0)
+    f.close()
+  
+if __name__== "__main__":
+  main()
