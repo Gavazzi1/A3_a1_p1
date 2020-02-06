@@ -5,6 +5,77 @@ import os
 from sor import SoR
 import util
 
+def int_row(mySor):
+    base = 0
+    for i in range(1, len(mySor.data)):
+        for j in range(1, mySor.numColumns):
+            base = base + int(mySor.getElement(j, i))
+
+def int_col(mySor):
+    base = 0
+    for j in range(1, mySor.numColumns):
+        for i in range(1, len(mySor.data)):
+            base = base + int(mySor.getElement(j, i))
+
+def float_row(mySor):
+    base = 0
+    for i in range(1, len(mySor.data)):
+        for j in range(1, mySor.numColumns):
+            base = base + float(mySor.getElement(j, i))
+
+def float_col(mySor):
+    base = 0
+    for j in range(1, mySor.numColumns):
+        for i in range(1, len(mySor.data)):
+            base = base + float(mySor.getElement(j, i))
+
+def bool_row(mySor):
+    base = False
+    for i in range(1, len(mySor.data)):
+        for j in range(1, mySor.numColumns):
+            base = base ^ bool(mySor.getElement(j, i))
+
+def bool_col(mySor):
+    base = False
+    for j in range(1, mySor.numColumns):
+        for i in range(1, len(mySor.data)):
+            base = base ^ bool(mySor.getElement(j, i))
+
+def string_row(mySor):
+    base = 0
+    for i in range(1, len(mySor.data)):
+        for j in range(1, mySor.numColumns):
+            base = len(mySor.getElement(j, i))
+
+def string_col(mySor):
+    base = 0
+    for j in range(1, mySor.numColumns):
+        for i in range(1, len(mySor.data)):
+            base = len(mySor.getElement(j, i))
+
+
+def benchmark(dType, pattern, mySor):
+    if dType == "int":
+        if pattern == "byrow":
+            int_row(mySor)
+        elif pattern == "bycol":
+            int_col(mySor)
+    elif dType == "float":
+        if pattern == "byrow":
+            float_row(mySor)
+        elif pattern == "bycol":
+            float_col(mySor)
+    elif dType == "bool":
+        if pattern == "byrow":
+            bool_row(mySor)
+        elif pattern == "bycol":
+            bool_col(mySor)
+    elif dType == "string":
+        if pattern == "byrow":
+            string_row(mySor)
+        elif pattern == "bycol":
+            string_col(mySor)
+
 # Parse arguements and return dictionary that represents it
 def parseArgs(argv):
     args = {'fileName' : "",
@@ -14,7 +85,9 @@ def parseArgs(argv):
             'printColIdx1' : -1,
             'printColIdx2' : -1,
             'isMissingIdx1' : -1,
-            'isMissingIdx2' : -1}
+            'isMissingIdx2' : -1,
+            'type' : -1,
+            'pattern' : -1}
 
     argsIndex = { 'fileName' : -1,
                     'from' : -1,
@@ -23,7 +96,9 @@ def parseArgs(argv):
                     'printColIdx1' : -1,
                     'printColIdx2' : -1,
                     'isMissingIdx1' : -1,
-                    'isMissingIdx2' : -1}
+                    'isMissingIdx2' : -1,
+                    'type' : -1,
+                    'pattern' : -1}
 
     index = 0
     for arg in argv:
@@ -41,6 +116,10 @@ def parseArgs(argv):
         elif arg == "-is_missing_idx":
             argsIndex['isMissingIdx1'] = index + 1
             argsIndex['isMissingIdx2'] = index + 2
+        elif arg == "-type":
+            argsIndex['type'] = index + 1
+        elif arg == "-pattern":
+            argsIndex['pattern'] = index + 1
         index+= 1
 
     for key, value in argsIndex.items():
@@ -62,6 +141,11 @@ def main():
     mySor = SoR()
     mySor.generateSchema(f)
     mySor.generateData(f, start, length, fileSize)
+
+    # Put new benchmarking capability here
+    if args['type'] != -1 and args['pattern'] != -1:
+        benchmark(args['type'], args['pattern'], mySor)
+        return
     
     # Print the type of a column: BOOL, INT, FLOAT, STRING
     if args['printColType'] != -1:
